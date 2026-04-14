@@ -1,0 +1,78 @@
+{
+    "clientInfo": {
+        "name": "Juan Domingo Exequiel Morales",
+        "email": "admin@example.com",
+        "company": "PichiriKa",
+        "description": "Necesito una landing page para mi negocio"
+    },
+    "pageType": {
+        "id": "landing",
+        "name": "Landing Page",
+        "description": "Página de aterrizaje optimizada para conversiones con diseño atractivo y llamadas a la acción claras.",
+        "basePrice": 250,
+        "estimatedDays": 7,
+        "features": [
+            {
+                "name": "Diseño responsive",
+                "description": "Adaptación perfecta a todos los dispositivos móviles, tablets y escritorio",
+                "details": [
+                    "Optimización para móviles",
+                    "Pruebas en múltiples dispositivos",
+                    "Carga rápida en todas las pantallas",
+                    "Navegación táctil optimizada"
+                ]
+            },
+            {
+                "name": "Optimización SEO básica",
+                "description": "Configuración inicial para aparecer en Google y otros buscadores",
+                "details": [
+                    "Meta tags optimizados",
+                    "Estructura HTML semántica",
+                    "Velocidad de carga optimizada",
+                    "URLs amigables"
+                ]
+            },
+            {
+                "name": "Formulario de contacto",
+                "description": "Sistema de contacto funcional con validación y envío de emails",
+                "details": [
+                    "Validación de campos",
+                    "Envío automático de emails",
+                    "Protección anti-spam",
+                    "Confirmación de envío"
+                ]
+            }
+        ]
+    },
+    "additionalFeatures": [
+        {
+            "id": "seo",
+            "name": "SEO Avanzado",
+            "price": 100,
+            "description": "Optimización completa para motores de búsqueda",
+            "benefits": [
+                "Mejor posicionamiento en Google",
+                "Aumento del tráfico orgánico",
+                "Análisis de competencia",
+                "Reportes mensuales de rendimiento"
+            ]
+        },
+        {
+            "id": "hosting",
+            "name": "Hosting Premium (1 año)",
+            "price": 100,
+            "description": "Hosting de alta calidad con SSD, CDN global y soporte 24/7",
+            "benefits": [
+                "Velocidad de carga superior",
+                "Seguridad garantizada",
+                "Soporte 24/7",
+                "99.9% tiempo activo",
+                "CDN global incluido"
+            ]
+        }
+    ],
+    "timeline": "normal",
+    "estimatedDays": 7,
+    "deliveryDate": "sábado, 13 de diciembre de 2025",
+    "totalPrice": 450
+}
