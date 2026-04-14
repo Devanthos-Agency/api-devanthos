@@ -1,8 +1,10 @@
 import { Request, Response, RequestHandler } from "express";
 import { BudgetRequest } from "../models/budget.model";
 import { BudgetPdfService } from "../services/budgetPdf.service";
+import { LeadService } from "../services/lead.service";
+import { sendBudgetConfirmationEmail } from "../services/email.service";
 import asyncHandler from "../utils/asyncHandler";
-import { errorResponse } from "../utils/responseHelper";
+import { ValidationError } from "../utils/errors";
 
 /**
  * Controlador para generar y descargar PDF de presupuesto
@@ -11,54 +13,47 @@ export const generateBudgetPdf: RequestHandler = asyncHandler(
     async (req: Request, res: Response) => {
         const budgetData: BudgetRequest = req.body;
 
-        // Validar datos requeridos
+        // Validaciones — lanzan errores que el error handler captura automáticamente
         if (!budgetData.clientInfo || !budgetData.pageType) {
-            errorResponse(
-                res,
+            throw new ValidationError(
                 "Faltan datos requeridos: clientInfo y pageType son obligatorios",
-                400
             );
-            return;
         }
 
-        // Validar información del cliente
         if (!budgetData.clientInfo.name || !budgetData.clientInfo.email) {
-            errorResponse(
-                res,
+            throw new ValidationError(
                 "Faltan datos del cliente: name y email son obligatorios",
-                400
             );
-            return;
         }
 
-        // Validar tipo de página
         if (!budgetData.pageType.name || !budgetData.pageType.basePrice) {
-            errorResponse(
-                res,
+            throw new ValidationError(
                 "Faltan datos del tipo de página: name y basePrice son obligatorios",
-                400
             );
-            return;
         }
 
-        try {
-            // Generar PDF
-            const { pdfBuffer, budgetNumber } =
-                await BudgetPdfService.generatePdf(budgetData);
+        // Generar PDF
+        const { pdfBuffer, budgetNumber } =
+            await BudgetPdfService.generatePdf(budgetData);
 
-            // Configurar headers para descarga
-            res.setHeader("Content-Type", "application/pdf");
-            res.setHeader(
-                "Content-Disposition",
-                `attachment; filename="Presupuesto-${budgetNumber}.pdf"`
-            );
-            res.setHeader("Content-Length", pdfBuffer.length);
+        // Guardar lead y enviar email de confirmación (no bloqueante)
+        LeadService.saveLead(budgetData, budgetNumber)
+            .then((lead) =>
+                sendBudgetConfirmationEmail(lead, pdfBuffer, budgetNumber),
+            )
+            .catch((err) => {
+                console.error("Error al guardar lead o enviar email:", err);
+            });
 
-            // Enviar PDF directamente
-            res.send(pdfBuffer);
-        } catch (error) {
-            console.error("Error en generateBudgetPdf:", error);
-            errorResponse(res, "Error al generar el PDF del presupuesto", 500);
-        }
-    }
+        // Configurar headers para descarga
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="Presupuesto-${budgetNumber}.pdf"`,
+        );
+        res.setHeader("Content-Length", pdfBuffer.length);
+
+        // Enviar PDF directamente
+        res.send(pdfBuffer);
+    },
 );
