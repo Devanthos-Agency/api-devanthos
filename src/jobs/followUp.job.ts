@@ -29,7 +29,7 @@ export function startFollowUpJob(): void {
                     try {
                         await sendFollowUpEmail(lead);
                         await LeadService.markFollowUpSent(
-                            (lead._id as string).toString(),
+                            (lead._id as unknown as string).toString(),
                         );
                         enviados++;
                     } catch (err) {
