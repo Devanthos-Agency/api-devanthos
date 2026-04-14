@@ -1,25 +1,36 @@
 import { Request, Response, NextFunction } from "express";
+import { AppError, ValidationError } from "../utils/errors";
 
 /**
- * Middleware centralizado para manejo de errores
+ * Middleware centralizado para manejo de errores.
+ * - Errores operacionales (AppError): devuelve el statusCode y mensaje controlado.
+ * - Errores inesperados: devuelve 500 sin filtrar detalles en producción.
  */
-
-interface CustomError extends Error {
-    statusCode?: number;
-}
-
 const errorHandler = (
-    err: CustomError,
-    req: Request,
+    err: Error,
+    _req: Request,
     res: Response,
-    next: NextFunction
+    _next: NextFunction,
 ): void => {
-    console.error("Error:", err);
+    if (err instanceof AppError) {
+        res.status(err.statusCode).json({
+            success: false,
+            message: err.message,
+            ...(err instanceof ValidationError &&
+                err.errors && { errors: err.errors }),
+        });
+        return;
+    }
 
-    const statusCode = err.statusCode || 500;
-    const message = err.message || "Error interno del servidor";
+    // Error inesperado — logear stack completo
+    console.error("Error no controlado:", err);
 
-    res.status(statusCode).json({
+    const message =
+        process.env.NODE_ENV === "production"
+            ? "Error interno del servidor"
+            : err.message;
+
+    res.status(500).json({
         success: false,
         message,
         ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
