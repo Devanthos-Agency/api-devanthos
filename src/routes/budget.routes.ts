@@ -1,7 +1,7 @@
-import { Router } from "express";
+import { Router, IRouter } from "express";
 import { generateBudgetPdf } from "../controllers/budget.controller";
 
-const router = Router();
+const router: IRouter = Router();
 
 /**
  * @route   POST /api/budget/generate
