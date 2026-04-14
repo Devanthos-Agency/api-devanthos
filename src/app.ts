@@ -4,7 +4,6 @@ import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
 import mongoose from "mongoose";
-import { apiReference } from "@scalar/express-api-reference";
 
 import routes from "./routes";
 import errorHandler from "./middlewares/errorHandler";
@@ -42,15 +41,21 @@ app.get("/openapi.json", (_req: Request, res: Response) => {
     res.json(openApiSpec);
 });
 
-app.use(
-    "/docs",
-    apiReference({
-        theme: "kepler",
-        spec: {
-            content: openApiSpec,
-        },
-    }),
-);
+app.use("/docs", async (req, res, next) => {
+    try {
+        const { apiReference } = await import(
+            "@scalar/express-api-reference"
+        );
+        apiReference({
+            theme: "kepler",
+            spec: {
+                content: openApiSpec,
+            },
+        })(req, res);
+    } catch (err) {
+        next(err);
+    }
+});
 
 // Ruta de health check
 app.get("/health", (_req: Request, res: Response) => {
