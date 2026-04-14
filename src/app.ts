@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
+import mongoose from "mongoose";
 import { apiReference } from "@scalar/express-api-reference";
 
 import routes from "./routes";
@@ -19,14 +20,14 @@ app.use(
     helmet({
         contentSecurityPolicy: false, // Deshabilitar CSP para Scalar
         crossOriginEmbedderPolicy: false,
-    })
+    }),
 );
 app.use(cors());
 app.use(morgan("dev"));
 
 // Parseo de JSON y URL encoded
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Rutas principales
 app.use("/api", routes);
@@ -48,14 +49,24 @@ app.use(
         spec: {
             content: openApiSpec,
         },
-    })
+    }),
 );
 
 // Ruta de health check
 app.get("/health", (_req: Request, res: Response) => {
-    res.status(200).json({
-        status: "OK",
+    const mongoState = mongoose.connection.readyState;
+    const mongoStatus: Record<number, string> = {
+        0: "disconnected",
+        1: "connected",
+        2: "connecting",
+        3: "disconnecting",
+    };
+
+    res.status(mongoState === 1 ? 200 : 503).json({
+        status: mongoState === 1 ? "OK" : "DEGRADED",
         timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        mongodb: mongoStatus[mongoState] ?? "unknown",
     });
 });
 
