@@ -534,16 +534,28 @@ export class BudgetPdfService {
             const html = this.generateHtml(budgetData, budgetNumber);
 
             // Lanzar navegador con configuración optimizada
-            browser = await puppeteer.launch({
-                headless: true,
-                args: [
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu",
-                ],
-                timeout: 30000,
-            });
+            const isProduction = process.env.NODE_ENV === "production";
+
+            if (isProduction) {
+                const chromium = await import("@sparticuz/chromium");
+                browser = await puppeteer.launch({
+                    args: chromium.default.args,
+                    executablePath: await chromium.default.executablePath(),
+                    headless: true,
+                    timeout: 30000,
+                });
+            } else {
+                browser = await puppeteer.launch({
+                    headless: true,
+                    args: [
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-gpu",
+                    ],
+                    timeout: 30000,
+                });
+            }
 
             const page = await browser.newPage();
 
