@@ -36,7 +36,7 @@ export class BudgetPdfService {
      */
     private static generateHtml(
         data: BudgetRequest,
-        budgetNumber: string
+        budgetNumber: string,
     ): string {
         const {
             clientInfo,
@@ -342,14 +342,14 @@ export class BudgetPdfService {
             <body>
                 <div class="date-generated">
                     Presupuesto N° ${budgetNumber} - Generado el: ${new Date().toLocaleDateString(
-            "es-ES",
-            {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-            }
-        )}
+                        "es-ES",
+                        {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        },
+                    )}
                 </div>
 
                 <div class="header">
@@ -411,7 +411,7 @@ export class BudgetPdfService {
                                 .map(
                                     (feature) => `
                                 <div class="feature-badge">${feature.name}</div>
-                            `
+                            `,
                                 )
                                 .join("")}
                         </div>
@@ -433,10 +433,10 @@ export class BudgetPdfService {
                                     }</div>
                                 </div>
                                 <div class="price">+${this.formatCurrency(
-                                    feature.price
+                                    feature.price,
                                 )}</div>
                             </div>
-                        `
+                        `,
                             )
                             .join("")}
                     </div>
@@ -451,8 +451,8 @@ export class BudgetPdfService {
                         data.timeline === "urgent"
                             ? "Urgente"
                             : data.timeline === "extended"
-                            ? "Flexible"
-                            : "Normal"
+                              ? "Flexible"
+                              : "Normal"
                     }</p>
                     <p><strong>Tiempo estimado:</strong> ${estimatedDays} días hábiles</p>
                     <p class="delivery-date">Fecha estimada de entrega: ${deliveryDate}</p>
@@ -464,7 +464,7 @@ export class BudgetPdfService {
                     <div class="budget-line">
                         <span class="label">${pageType.name}</span>
                         <span class="amount">${this.formatCurrency(
-                            pageType.basePrice
+                            pageType.basePrice,
                         )}</span>
                     </div>
                     
@@ -474,17 +474,17 @@ export class BudgetPdfService {
                         <div class="budget-line">
                             <span class="label">${feature.name}</span>
                             <span class="amount">+${this.formatCurrency(
-                                feature.price
+                                feature.price,
                             )}</span>
                         </div>
-                    `
+                    `,
                         )
                         .join("")}
                     
                     <div class="budget-line total">
                         <span class="label">TOTAL DE LA INVERSIÓN</span>
                         <span class="amount">${this.formatCurrency(
-                            totalPrice
+                            totalPrice,
                         )}</span>
                     </div>
                 </div>
@@ -514,7 +514,7 @@ export class BudgetPdfService {
      * Genera el PDF del presupuesto
      */
     static async generatePdf(
-        data: BudgetRequest
+        data: BudgetRequest,
     ): Promise<{ pdfBuffer: Buffer; budgetNumber: string }> {
         let browser;
 
@@ -534,16 +534,28 @@ export class BudgetPdfService {
             const html = this.generateHtml(budgetData, budgetNumber);
 
             // Lanzar navegador con configuración optimizada
-            browser = await puppeteer.launch({
-                headless: true,
-                args: [
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu",
-                ],
-                timeout: 30000,
-            });
+            const isProduction = process.env.NODE_ENV === "production";
+
+            if (isProduction) {
+                const chromium = await import("@sparticuz/chromium");
+                browser = await puppeteer.launch({
+                    args: chromium.default.args,
+                    executablePath: await chromium.default.executablePath(),
+                    headless: true,
+                    timeout: 30000,
+                });
+            } else {
+                browser = await puppeteer.launch({
+                    headless: true,
+                    args: [
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-gpu",
+                    ],
+                    timeout: 30000,
+                });
+            }
 
             const page = await browser.newPage();
 
