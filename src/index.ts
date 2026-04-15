@@ -10,10 +10,18 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 async function bootstrap() {
-    connectMongoDB().catch((err) => {
-        console.error("⚠️  No se pudo conectar a MongoDB:", err.message);
-        console.error("   Configura MONGODB_URI en tu archivo .env");
-    });
+    try {
+        await connectMongoDB();
+    } catch (err) {
+        console.error(
+            "⚠️  No se pudo conectar a MongoDB tras varios intentos:",
+            (err as Error).message,
+        );
+        console.error(
+            "   Verifica MONGODB_URI y la whitelist de IPs en Atlas.",
+        );
+        process.exit(1);
+    }
 
     const server = http.createServer(app);
 
